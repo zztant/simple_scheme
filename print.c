@@ -5,13 +5,13 @@ void print_obj_rational(FILE* output, object* obj){
 	if( (val1>0)!=(val2>0) )
 		fprintf(output,"-");
 	if(val2 == 1)
-		fprintf(output,"%d\n",abs(val1));
+		fprintf(output,"%d",abs(val1));
 	else
-		fprintf(output,"%d/%d\n",abs(val1),abs(val2));
+		fprintf(output,"%d/%d",abs(val1),abs(val2));
 }
 
 void print_obj_prim_proc(FILE* output, object* obj){
-	fprintf(output,"<primitive procedure>\n");
+	fprintf(output,"<primitive procedure>");
 }
 
 void print_obj_pair(FILE *output, object* pair){
@@ -25,19 +25,39 @@ void print_obj_pair(FILE *output, object* pair){
 		fprintf(output, " ");
 		print_obj_pair(output,cdr_obj);
 	}
-	else if(cdr_obj->type == null_list)
+	else if(cdr_obj == null_list ){
 		return;
+	}
 	else{
 		fprintf(output, " . ");
 		print_object(output, cdr_obj);
 	}
 }
 
+void print_obj_symbol(FILE* output, object* obj){
+	fprintf(output,"%s",obj->data.s_symbol.value);
+}
+
+void print_obj_comp_proc(FILE* output, object* obj){
+	fprintf(output,"compound procedure");
+}
+
+void print_obj_boolean(FILE* output, object* obj){
+	fprintf(output,"#%c",(obj->data.s_boolean.value == 0)?'f':'t');
+}
+
 void print_object(FILE *output, object* obj){
 	switch(obj->type){
 		case RATIONAL: print_obj_rational(output,obj); return;
 		case PRIM_PROC: print_obj_prim_proc(output,obj); return;
-		case PAIR: print_obj_pair(output,obj); return;
+		case PAIR:
+				fprintf(output,"(");	
+				print_obj_pair(output,obj); 
+				fprintf(output,")");
+				return;
+		case SYMBOL: print_obj_symbol(output,obj); return;
+		case COMP_PROC: print_obj_comp_proc(output,obj); return;
+		case BOOLEAN: print_obj_boolean(output,obj); return;
 	}
 }
 
