@@ -1,5 +1,3 @@
-
-
 object* alloc_object(){
 	object* obj =(object*)malloc(sizeof(object));
 	return obj;
@@ -73,6 +71,22 @@ object* make_rational(int value1, int value2){
 	return obj;
 }
 
+//need change
+char value_equal(object* val1, object* val2){
+	return val1->data.s_rational.value1 == val2->data.s_rational.value1
+		&& val1->data.s_rational.value2 == val2->data.s_rational.value2;
+}
+
+char value_lower(object* val1, object* val2){
+	int value1 = val1->data.s_rational.value1 *
+		         val2->data.s_rational.value2
+				 - val1->data.s_rational.value2 *
+				   val2->data.s_rational.value1;
+	int value2 = val1->data.s_rational.value2 *
+				 val2->data.s_rational.value2;
+	return (value1>0&&value2<0) || (value1<0&&value2>0);
+}
+
 object* make_real(double value){
 	object* obj = alloc_object();
 	obj->type = REAL;
@@ -103,12 +117,11 @@ object* make_port(char* filename){
 }
 
 object* make_comp_proc(object* parameters,
-		object* body, object* env){
+		object* body){
 	object* obj = alloc_object();
 	obj->type = COMP_PROC;
 	obj->data.s_comp_proc.parameters =parameters;
 	obj->data.s_comp_proc.body = body;
-	obj->data.s_comp_proc.env = env;
 	return obj;
 }
 
@@ -182,6 +195,18 @@ char is_atom(object* obj){
 		return 0;
 	else
 		return 1;
+}
+
+char is_true(object* obj){
+	return obj != symbol_false;
+}
+
+char is_false(object* obj){
+	return !is_true(obj);
+}
+
+char is_number(object* obj){
+	return is_rational(obj) || is_real(obj);
 }
 
 /* 环境定义以及符号表 */

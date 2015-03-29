@@ -12,7 +12,14 @@ object* read_pair(FILE* file){
 	object* car_obj;
 	object* cdr_obj;
 	read_space(file);
-	if(  (c=getc(file)) == ')' )
+	c = getc(file);
+	if( c == '.' ){
+		cdr_obj = read_exp(file);
+		read_space(file);
+		getc(file);
+		return cdr_obj;
+	}
+	else if(  c == ')' )
 		return null_list;
 	else
 		ungetc(c,file);
@@ -87,9 +94,9 @@ object* read_exp(FILE* file){
 			return read_pair(file);
 		else if(c=='#'){
 			if( (c=getc(file)) == 't')
-				return make_boolean(1);
+				return symbol_true;
 			else if ( c == 'f' )
-				return make_boolean(0);
+				return symbol_false;
 			else{
 				fprintf(stderr,"wrong identifier for #");
 				exit(1);
