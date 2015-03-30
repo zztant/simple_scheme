@@ -1,3 +1,12 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include"object.h"
+#include"eval.h"
+#include"lex.h"
+#include"print.h"
+#include"gc.h"
+#include"vm.h"
 
 void read_space(FILE* file){
 	char c;
@@ -45,8 +54,9 @@ object* read_digit(FILE* file){
 	if(c=='/'){
 		c = getc(file);
 		if(!isdigit(c)){
-			fprintf(stderr,"wrong number expression!");
-			exit(1);
+			fprintf(stderr,"wrong number expression!\n>");
+			fflush(file);
+			return read_exp(file);
 		}
 		while(isdigit(c)){
 			value2 = value2*10 + c-'0';
@@ -98,8 +108,9 @@ object* read_exp(FILE* file){
 			else if ( c == 'f' )
 				return symbol_false;
 			else{
-				fprintf(stderr,"wrong identifier for #");
-				exit(1);
+				fprintf(stderr,"wrong identifier for #\n>");
+				fflush(file);
+				return read_exp(file);
 			}
 		}
 		else if(isdigit(c)){
@@ -110,6 +121,11 @@ object* read_exp(FILE* file){
 			return read_string(file);
 		else if(c=='\'')
 			return cons(symbol_quote, cons(read_exp(file), null_list));
+		else if(c==')'){
+			fprintf(stderr,"wrong expression for )\n>");
+			fflush(file);
+			return read_exp(file);
+		}
 		else {
 			ungetc(c,file);
 			return read_symbol(file);

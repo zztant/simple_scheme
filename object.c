@@ -1,5 +1,16 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include"object.h"
+#include"eval.h"
+#include"lex.h"
+#include"print.h"
+#include"gc.h"
+#include"vm.h"
+
+
 object* alloc_object(){
-	object* obj =(object*)malloc(sizeof(object));
+	object* obj =(object*)gc_malloc(global_gc,global_vm);
 	return obj;
 }
 
@@ -27,7 +38,7 @@ object* cdr(object* obj){
 }
 
 object* find_symbol(char* value){
-	object* obj = symbol_table;
+	object* obj = global_vm->table;
 	while(!is_null_list(obj)){
 		if( strcmp(value,car(obj)->data.s_symbol.value) == 0)
 			return car(obj);
@@ -45,7 +56,7 @@ object* make_symbol(char *value){
 	obj->data.s_symbol.value =(char*)malloc(sizeof(strlen(value)+1));
 	strcpy(obj->data.s_symbol.value,value);
 	
-	symbol_table = cons(obj,symbol_table);
+	global_vm->table = cons(obj,global_vm->table);
 
 	return obj;
 }
@@ -117,11 +128,12 @@ object* make_port(char* filename){
 }
 
 object* make_comp_proc(object* parameters,
-		object* body){
+		object* body, object* env){
 	object* obj = alloc_object();
 	obj->type = COMP_PROC;
 	obj->data.s_comp_proc.parameters =parameters;
 	obj->data.s_comp_proc.body = body;
+	obj->data.s_comp_proc.env = env;
 	return obj;
 }
 

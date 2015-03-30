@@ -1,3 +1,13 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include"object.h"
+#include"eval.h"
+#include"lex.h"
+#include"print.h"
+#include"gc.h"
+#include"vm.h"
+
 
 void print_obj_rational(FILE* output, object* obj){
 	int val1 = obj->data.s_rational.value1;
