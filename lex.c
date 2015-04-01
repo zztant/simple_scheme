@@ -29,7 +29,7 @@ object* read_pair(FILE* file){
 		return cdr_obj;
 	}
 	else if(  c == ')' )
-		return null_list;
+		return make_null_list();
 	else
 		ungetc(c,file);
 	car_obj = read_exp(file);
@@ -77,7 +77,6 @@ object* read_string(FILE* file){
 	while( (c=getc(file))!= '"')
 		tmp[i++] = c;
 	tmp[i] = '\0';
-	ungetc(c,file);
 	return make_string(tmp);
 }
 
@@ -95,7 +94,7 @@ object* read_symbol(FILE* file){
 object* read_exp(FILE* file){
 	char c;
 	object* car_obj;
-
+	fflush(stdin);
 	if( (c=getc(file))!=EOF ){
 		ungetc(c,file);
 		read_space(file);
@@ -120,7 +119,7 @@ object* read_exp(FILE* file){
 		else if(c=='"')
 			return read_string(file);
 		else if(c=='\'')
-			return cons(symbol_quote, cons(read_exp(file), null_list));
+			return cons(make_symbol("quote"), cons(read_exp(file),make_null_list()));
 		else if(c==')'){
 			fprintf(stderr,"wrong expression for )\n>");
 			fflush(file);

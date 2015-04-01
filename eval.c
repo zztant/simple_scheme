@@ -8,6 +8,9 @@
 #include"gc.h"
 #include"vm.h"
 
+#define symbol_true (make_boolean(1))
+#define symbol_false (make_boolean(0))
+
 object* prim_proc_plus(object* arguments){
 	int value1=0,value2=1;
 	object* obj_car;
@@ -107,10 +110,10 @@ object* prim_proc_div(object* arguments){
 
 object* prim_proc_and(object* argu){
 	object* and = symbol_true;
-	while(argu != null_list){
+	while(!is_null_list(argu)){
 		and = car(argu);
-		if( and == symbol_false)
-			return symbol_false;
+		if( is_false(and) )
+			return and;
 		argu = cdr(argu);
 	}
 	return and;
@@ -118,9 +121,9 @@ object* prim_proc_and(object* argu){
 
 object* prim_proc_or(object* argu){
 	object* or = symbol_false;
-	while(argu != null_list){
+	while(!is_null_list(argu)){
 		or = car(argu);
-		if( or != symbol_false)
+		if( is_true(or) )
 			return or;
 		argu = cdr(argu);
 	}
@@ -179,26 +182,35 @@ object* prim_proc_cons(object* arguments){
 }
 
 object* prim_proc_is_null(object* exp){
-	return is_null_list(exp) ? symbol_true : symbol_false;
+	exp = car(exp);
+	if (is_null_list(exp)) 
+		return symbol_true;
+	else
+		return symbol_false;
 }
 
 object* prim_proc_is_proc(object* exp){
+	exp = car(exp);
 	return (is_prim_proc(exp) || is_comp_proc(exp))?symbol_true:symbol_false;
 }
 
 object* prim_proc_is_pair(object* exp){
+	exp = car(exp);
 	return is_pair(exp)?symbol_true:symbol_false;
 }
 
 object* prim_proc_is_string(object* exp){
+	exp = car(exp);
 	return is_string(exp)?symbol_true:symbol_false;
 }
 
 object* prim_proc_is_boolean(object* exp){
+	exp = car(exp);
 	return is_boolean(exp)?symbol_true:symbol_false;
 }
 
 object* prim_proc_is_symbol(object* exp){
+	exp = car(exp);
 	return is_symbol(exp)?symbol_true:symbol_false;
 }
 
@@ -233,33 +245,48 @@ object* prim_proc_apply(object* exp){
 	return apply(proc,argu);
 }
 
-object* prim_proc_eval(){
-	return null_list;
+object* prim_proc_eval(object* exp){
+	exp = caar(exp);
+	return make_null_list();
+}
+
+
+char symbol_compare(object* exp, char* value){
+	return strcmp(exp->data.s_symbol.value,value) == 0;
 }
 
 char is_definition(object* exp){
-	return is_pair(exp) && car(exp) == symbol_define;
+	return is_pair(exp) && symbol_compare(car(exp),"define");
 }
 
 char is_quoted(object* exp){
-	return is_pair(exp) && car(exp) == symbol_quote;
+	return is_pair(exp) && symbol_compare(car(exp),"quote");
 }
 
 char is_set(object* exp){
-	return is_pair(exp) && car(exp) == symbol_set;
+	return is_pair(exp) && symbol_compare(car(exp),"set!");
 }
 
 
 char is_lambda(object* exp){
-	return is_pair(exp) && car(exp) == symbol_lambda;
+	return is_pair(exp) && symbol_compare(car(exp),"lambda");
 }
 
 
 
 char is_if(object* exp){
-	return is_pair(exp) && car(exp) == symbol_if;
+	return is_pair(exp) && symbol_compare(car(exp),"if");
 }
 
+
+char is_false(object* obj){
+	return obj->type == BOOLEAN &&
+		   obj->data.s_boolean.value == 0;
+}
+
+char is_true(object* obj){
+	return !is_false(obj);
+}
 
 object* apply(object* proc, object* arguments){
 	return (*(proc->data.s_prim_proc.func))(arguments);

@@ -9,12 +9,13 @@
 #include"vm.h"
 #include"compile.h"
 
-object* make_code(code_type type, object*argu, object* next){
-	object* obj = (object*)malloc(sizeof(object));
-	obj->type = BYTECODE;
-	obj->data.code.type = type;
-	obj->data.code.argu = argu;
-	obj->data.code.next = next;
+/* 指令也为pair,car指向参数，cdr指向下一条指令 */
+
+object* make_code(object_type type, object* argu, object* next){
+	object* obj = alloc_object();
+	obj->type = type;
+	obj->data.s_pair.car = argu;
+	obj->data.s_pair.cdr = next;
 	return obj;
 }
 
@@ -29,8 +30,9 @@ object* compile_symbol(object* symbol, secd_vm* vm){
 }
 
 object* compile_proc(object* exp, secd_vm* vm){
-	vm->code = make_code(AP,null_list,vm->code);
+	vm->code = make_code(AP,make_null_list(),vm->code);
 	compile(exp,vm);
+	return true;
 }
 
 object* compile_argu(object* exp, secd_vm* vm){
@@ -38,12 +40,23 @@ object* compile_argu(object* exp, secd_vm* vm){
 		return true;
 	compile(car(exp),vm);
 	compile_argu(cdr(exp),vm);
+	return true;
+}
+
+char count_argu_num(object* exp){
+	if(is_null_list(exp))
+		return 0;
+	else
+		return 1 + count_argu_num(cdr(exp));
 }
 
 object* compile_pair(object* exp, secd_vm* vm){
 	if(is_null_list(exp)) 
 		return true;
 	compile_proc(car(exp),vm);
+	char c = count_argu_num(cdr(exp));
+	object* argu_num = make_rational(c,1);
+	vm->code = make_code(LIST,argu_num,vm->code);
 	compile_argu(cdr(exp),vm);
 	return true;
 }
@@ -71,12 +84,12 @@ object* compile_set(object* exp, secd_vm* vm){
 
 object* compile_ldf(object* param, object* body, secd_vm* vm){
 	secd_vm tmp;
-	tmp.code = make_code(RET,null_list,null_list);
+	tmp.code = make_code(RET,make_null_list(),make_null_list());
 	compile(body,&tmp);
 	vm->code = make_code(LDF,cons(param,tmp.code),vm->code);
 	return true;
 }
-//LDF指令的argu的car为形参列表，cdr指向第一条code
+//LDF指令的car为形参列表，cdr指向第一条code
 
 object* compile_lambda(object* exp, secd_vm* vm){
 	object* body = caddr(exp);
@@ -87,8 +100,8 @@ object* compile_lambda(object* exp, secd_vm* vm){
 
 object* compile_if(object* exp, secd_vm* vm){
 	secd_vm tmp1,tmp2;
-	tmp1.code = make_code(JOIN,null_list,null_list);
-	tmp2.code = make_code(JOIN,null_list,null_list);
+	tmp1.code = make_code(JOIN,make_null_list(),make_null_list());
+	tmp2.code = make_code(JOIN,make_null_list(),make_null_list());
 	object* cond = cadr(exp);
 	object* yes = caddr(exp);
 	object* no = cadddr(exp);
@@ -98,7 +111,7 @@ object* compile_if(object* exp, secd_vm* vm){
 	compile(cond,vm);
 	return true;
 }
-//SEL指令的argu的两个指针分别指向两个分支的命令
+//SEL指令的两个指针分别指向两个分支的code
 
 object* compile(object* exp, secd_vm* vm){
 	if( is_atom(exp) )
@@ -121,24 +134,41 @@ object* compile(object* exp, secd_vm* vm){
 		return true;
 }
 
+void print_code_sel(object* code){
+	printf("(");
+	print_code(caar(code));
+	printf("|");
+	print_code(cdar(code));
+	printf(")");
+}
 
+void print_code_ldf(object* code){
+	printf("(");
+	print_code(cdar(code));
+	printf(")");
+}
 
-void print_code(){
-	object* code = global_vm->code;
-	while(!is_null_list(code)){
-		switch(code->data.code.type){
-			case NIL: printf("NIL,"); break;
-			case LDC: printf("LDC,"); break;
-			case LD: printf("LD,"); break;
-			case SEL: printf("SEL,"); break;
-			case JOIN: printf("JOIN,"); break;
-			case AP: printf("AP,"); break;
-			case DUM: printf("DUM,"); break;
-			case RAP: printf("RAP,"); break;
-			case LDF: printf("LDF,"); break;
-			case DEFINE: printf("DEFINE,"); break;
-			case SET: printf("SET,"); break;
+void print_code(object* code){
+	   if(!is_null_list(code)){
+		switch(code->type){
+			case NIL: printf("NIL->"); break;
+			case LDC: printf("LDC->,"); break;
+			case LD: printf("LD->,"); break;
+
+			case SEL: printf("SEL->,"); print_code_sel(code); break;
+
+			case JOIN: printf("JOIN->,"); break;
+			case AP: printf("AP->,"); break;
+			case DUM: printf("DUM->,"); break;
+			case RAP: printf("RAP->,"); break;
+
+			case LDF: printf("LDF->,"); print_code_ldf(code); break;
+
+			case RET: printf("RET->,"); break;
+			case DEFINE: printf("DEFINE->,"); break;
+			case LIST: printf("LIST->,"); break;
+			case SET: printf("SET->,"); break;
 		}
-		code = next_code(code);
+		print_code(cdr(code));
 	}
 }

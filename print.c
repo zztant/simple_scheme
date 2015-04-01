@@ -35,7 +35,7 @@ void print_obj_pair(FILE *output, object* pair){
 		fprintf(output, " ");
 		print_obj_pair(output,cdr_obj);
 	}
-	else if(cdr_obj == null_list ){
+	else if(is_null_list(cdr_obj)){
 		return;
 	}
 	else{
@@ -56,6 +56,10 @@ void print_obj_boolean(FILE* output, object* obj){
 	fprintf(output,"#%c",(obj->data.s_boolean.value == 0)?'f':'t');
 }
 
+void print_obj_string(FILE* output, object* obj){
+	fprintf(output,"\"%s\"",obj->data.s_string.value);
+}
+
 void print_object(FILE *output, object* obj){
 	switch(obj->type){
 		case RATIONAL: print_obj_rational(output,obj); return;
@@ -66,8 +70,11 @@ void print_object(FILE *output, object* obj){
 				fprintf(output,")");
 				return;
 		case SYMBOL: print_obj_symbol(output,obj); return;
+		case STRING: print_obj_string(output,obj); return;
 		case COMP_PROC: print_obj_comp_proc(output,obj); return;
 		case BOOLEAN: print_obj_boolean(output,obj); return;
+		case NULL_LIST : printf("null_list");return;
+		default: printf("%d",obj->type);
 	}
 }
 

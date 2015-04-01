@@ -16,37 +16,54 @@
 #include"vm.c"
 #include"compile.c"
 
-
+#define add_procedure(scheme_name,c_name,vm) \
+	add_bind(make_symbol(scheme_name),        \
+			 make_prim_proc(c_name),     \
+			 vm)
 
 void init(){
-	null_list = (object*)malloc(sizeof(object));
-	null_list->type = NULL_LIST;
 	global_gc = init_gc();
 	global_vm = init_vm();
+	
+	add_procedure("+",prim_proc_plus,global_vm);
+	add_procedure("-",prim_proc_minus,global_vm);
+	add_procedure("*",prim_proc_mul,global_vm);
+	add_procedure("/",prim_proc_div,global_vm);
+	add_procedure("and",prim_proc_and,global_vm);
+	add_procedure("or",prim_proc_or,global_vm);
+	add_procedure("=",prim_proc_equal,global_vm);
+	add_procedure("<",prim_proc_lower,global_vm);
+	add_procedure(">",prim_proc_greater,global_vm);
+	add_procedure("cons",prim_proc_cons,global_vm);
+	add_procedure("null?",prim_proc_is_null,global_vm);
+	add_procedure("procedure?",prim_proc_is_proc,global_vm);
+	add_procedure("pair?",prim_proc_is_pair,global_vm);
+	add_procedure("string?",prim_proc_is_string,global_vm);
+	add_procedure("boolean?",prim_proc_is_boolean,global_vm);
+	add_procedure("symbol?",prim_proc_is_symbol,global_vm);
+	add_procedure("eq?",prim_proc_eq,global_vm);
+	add_procedure("car",prim_proc_car,global_vm);
+	add_procedure("cdr",prim_proc_cdr,global_vm);
+	add_procedure("apply",prim_proc_apply,global_vm);
+	add_procedure("eval",prim_proc_eval,global_vm); 
 
-	symbol_quote = make_symbol("quote");
-	symbol_lambda = make_symbol("lambda");
-	symbol_define = make_symbol("define");
-	symbol_true = make_symbol("#t");
-	symbol_false = make_symbol("#f");
-	symbol_set = make_symbol("set!");
-	symbol_begin = make_symbol("begin");
-	symbol_if = make_symbol("if");
-	symbol_ok = make_symbol("#ok");
 }
-
 
 int main(){
 	FILE* input;
 	object* stmt;
 	init();
+	do_collect(global_gc,global_vm);
 	while(1){
 		printf("\n>");
 		stmt = read_exp(stdin);
 		compile(stmt,global_vm);
-		print_code();
+		print_code(global_vm->code);
 		printf("\n");
-		collect(global_gc,global_vm);
+		eval_vm(global_vm);
+		print_ans(stdout,global_vm->stack);
+		global_vm->stack = make_null_list();
+		do_collect(global_gc,global_vm);
 	}
 	return 0;
 }

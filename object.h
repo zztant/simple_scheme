@@ -1,19 +1,20 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-typedef enum{
-	NIL,LDC,LD,SEL,JOIN,LDF,AP,RET,DUM,RAP,
-	DEFINE,SET
-}code_type;
 
 typedef enum{
+	/* scheme_type */
 	BOOLEAN,PAIR,SYMBOL,RATIONAL,REAL,CHAR,STRING,VECTOR,PORT,
-	PRIM_PROC,COMP_PROC,NULL_LIST,BYTECODE
+	PRIM_PROC,COMP_PROC,NULL_LIST,
+	/* code_type */
+	NIL,LDC,LD,SEL,JOIN,LDF,AP,RET,DUM,RAP,
+	DEFINE,SET,LIST,
+	/* gc */
+	BROKEN_HEART
 }object_type;
 
 typedef struct object{
 	object_type type;
-	int marked;
 	union{
 		struct{
 			char value;
@@ -49,31 +50,15 @@ typedef struct object{
 		struct{
 			struct object* (*func)(struct object* arguments);
 		}s_prim_proc;
-		struct{
-			code_type type;
-			struct object* argu;
-			struct object* next;
-		}code;
 	}data;
 }object;
-
-object* null_list;
-object* symbol_false;
-object* symbol_true;
-object* symbol_set;
-object* symbol_begin;
-object* symbol_if;
-object* symbol_ok;
-object* symbol_define;
-object* symbol_lambda;
-object* symbol_quote;
 
 object* alloc_object();
 object* make_boolean(char value);
 object* make_pair(object* car, object* cdr);
 object* car(object* obj);
 object* cdr(object* obj);
-object* find_symbol(char *value);
+object* find_symbol(char *value, object* table);
 object* make_symbol(char *value);
 int gcd(int val1, int val2);
 char value_equal(object* val1, object* val2);
@@ -132,8 +117,6 @@ object* make_env(object* env);
 #define cdddar(obj) cdr(cdr(cdr(car(obj))))
 #define cddddr(obj) cdr(cdr(cdr(cdr(obj))))
 #define cons(obj1,obj2) make_pair(obj1,obj2)
-#define operator(obj) car(obj)
-#define operands(obj) cdr(obj)
 #define true symbol_true
 #define false symbol_false
 

@@ -14,6 +14,12 @@ object* alloc_object(){
 	return obj;
 }
 
+object* make_broken_heart(){
+	object* obj = (object*)malloc(sizeof(object));
+	obj->type = BROKEN_HEART;
+	return obj;
+}
+
 object* make_boolean(char value){
 	object* obj = alloc_object();
 	obj->type = BOOLEAN;
@@ -37,30 +43,27 @@ object* cdr(object* obj){
 	return obj->data.s_pair.cdr;
 }
 
-object* find_symbol(char* value){
-	object* obj = global_vm->table;
-	while(!is_null_list(obj)){
-		if( strcmp(value,car(obj)->data.s_symbol.value) == 0)
-			return car(obj);
-		obj = cdr(obj);
-	}
-	return null_list;
+object* find_symbol(char *value, object* table){
+	if(is_null_list(table))
+		return make_null_list();
+	if(strcmp(value,car(table)->data.s_symbol.value)==0)
+		return car(table);
+	return find_symbol(value,cdr(table));
 }
 
 object* make_symbol(char *value){
-	object* obj = find_symbol(value);
+	object* obj = find_symbol(value,global_vm->table);
 	if(!is_null_list(obj))
 		return obj;
-	obj = alloc_object();
+	obj = (object*)malloc(sizeof(object));
 	obj->type = SYMBOL;
 	obj->data.s_symbol.value =(char*)malloc(sizeof(strlen(value)+1));
-	strcpy(obj->data.s_symbol.value,value);
+	obj->data.s_symbol.value = strcpy(obj->data.s_symbol.value,value);
 	
 	global_vm->table = cons(obj,global_vm->table);
 
 	return obj;
 }
-
 
 int gcd(int val1, int val2){
 	int rem;
@@ -147,12 +150,14 @@ object* make_prim_proc(object* (*func)(object* arguments)){
 object* make_null_list(){
 	object* obj = alloc_object();
 	obj->type = NULL_LIST;
+	obj->data.s_pair.car = 0;
+	obj->data.s_pair.cdr = 0;
 	return obj;
 }
 
 
 char is_null_list(object* obj){
-	return obj==null_list;
+	return obj->type == NULL_LIST;
 }
 
 char is_boolean(object* obj){
@@ -209,20 +214,9 @@ char is_atom(object* obj){
 		return 1;
 }
 
-char is_true(object* obj){
-	return obj != symbol_false;
-}
-
-char is_false(object* obj){
-	return !is_true(obj);
-}
 
 char is_number(object* obj){
 	return is_rational(obj) || is_real(obj);
 }
 
-/* 环境定义以及符号表 */
 
-object* make_env(object* env){
-	return cons(env,null_list);
-}
