@@ -12,7 +12,7 @@
 void print_obj_rational(FILE* output, object* obj){
 	int val1 = obj->data.s_rational.value1;
 	int val2 = obj->data.s_rational.value2;
-	if( (val1>0)!=(val2>0) )
+	if( (val1>=0)!=(val2>=0) )
 		fprintf(output,"-");
 	if(val2 == 1)
 		fprintf(output,"%d",abs(val1));

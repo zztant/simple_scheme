@@ -108,6 +108,14 @@ object* prim_proc_div(object* arguments){
 	return make_rational(value1,value2);
 }
 
+object* prim_proc_not(object* argu){
+	argu = car(argu);
+	if(is_false(argu))
+		return symbol_true;
+	else
+		return symbol_false;
+}
+
 object* prim_proc_and(object* argu){
 	object* and = symbol_true;
 	while(!is_null_list(argu)){
@@ -272,12 +280,21 @@ char is_lambda(object* exp){
 	return is_pair(exp) && symbol_compare(car(exp),"lambda");
 }
 
+char is_let(object* exp){
+	return is_pair(exp) && symbol_compare(car(exp),"let");
+}
 
+char is_letx(object* exp){
+	return is_pair(exp) && symbol_compare(car(exp),"let*");
+}
 
 char is_if(object* exp){
 	return is_pair(exp) && symbol_compare(car(exp),"if");
 }
 
+char is_eval(object* exp){
+	return is_pair(exp) && symbol_compare(car(exp),"eval");
+}
 
 char is_false(object* obj){
 	return obj->type == BOOLEAN &&

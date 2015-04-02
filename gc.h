@@ -1,7 +1,7 @@
 #ifndef GC_H
 #define GC_H
 
-#define MEMSIZE 192
+#define MEMSIZE 10000000
 
 #include"vm.h"
 

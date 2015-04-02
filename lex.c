@@ -45,14 +45,21 @@ char isdigit(char c){
 object* read_digit(FILE* file){
 	char c;
 	c = getc(file);
-	int value1=0,value2=0;
-
+	int value1=0,value2=0,positive1=1,positive2=1;
+	if(c=='-'){
+		positive1 = -1;	
+		c = getc(file);
+	}
 	while(isdigit(c)){
 		value1 = value1*10 + c-'0';
 		c = getc(file);
 	}
 	if(c=='/'){
 		c = getc(file);
+		if(c=='-'){
+			positive2 = -1;
+			c = getc(file);
+		}
 		if(!isdigit(c)){
 			fprintf(stderr,"wrong number expression!\n>");
 			fflush(file);
@@ -67,6 +74,8 @@ object* read_digit(FILE* file){
 	else 
 		ungetc(c,file);
 	if(value2 == 0) value2 = 1;
+	value1 *= positive1;
+	value2 *= positive2;
 	return make_rational(value1,value2);
 }
 
@@ -116,6 +125,18 @@ object* read_exp(FILE* file){
 			ungetc(c,file);
 			return read_digit(file);
 		}
+		else if( c == '-'){
+			c = getc(file);
+			if(isdigit(c)){
+				ungetc(c,file);
+				ungetc('-',file);
+				return read_digit(file);
+			}
+			else{
+				ungetc(c,file);
+				return make_symbol("-");
+			}
+		}		
 		else if(c=='"')
 			return read_string(file);
 		else if(c=='\'')

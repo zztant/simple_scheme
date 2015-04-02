@@ -9,6 +9,7 @@
 #include"vm.h"
 #include"compile.h"
 
+
 /* 指令也为pair,car指向参数，cdr指向下一条指令 */
 
 object* make_code(object_type type, object* argu, object* next){
@@ -98,6 +99,41 @@ object* compile_lambda(object* exp, secd_vm* vm){
 	return true;
 }
 
+object* compile_let(object* exp, secd_vm* vm){
+	object* bind_list = cadr(exp);
+	object* var_list = make_null_list();
+	object* val_list = make_null_list();
+	exp = caddr(exp);
+	while(!is_null_list(bind_list)){
+		var_list = cons(caar(bind_list),var_list);
+		val_list = cons(cadar(bind_list),val_list);
+		bind_list = cdr(bind_list);
+	}
+	exp = cons(cons(make_symbol("lambda"),cons(var_list,cons(exp,make_null_list()))),val_list);
+	compile(exp,vm);
+}
+
+object* compile_letx(object* exp,secd_vm* vm){
+	object* bind_list = cadr(exp);
+	object* var_list = make_null_list();
+	object* val_list = make_null_list();
+	exp = caddr(exp);
+	while(!is_null_list(bind_list)){
+		var_list = cons(caar(bind_list),var_list);
+		val_list = cons(cadar(bind_list),val_list);
+		bind_list = cdr(bind_list);
+	}
+	while(!is_null_list(var_list)){
+		exp = cons( cons(make_symbol("lambda"),cons(cons(car(var_list),make_null_list()),cons(exp,make_null_list()))),cons(car(val_list),make_null_list()));
+		var_list = cdr(var_list);
+		val_list = cdr(val_list);
+	}
+	print_object(stdout,exp);
+	printf("\n");
+	compile(exp,vm);
+}
+
+
 object* compile_if(object* exp, secd_vm* vm){
 	secd_vm tmp1,tmp2;
 	tmp1.code = make_code(JOIN,make_null_list(),make_null_list());
@@ -128,6 +164,14 @@ object* compile(object* exp, secd_vm* vm){
 		return compile_if(exp,vm);
 	else if(is_symbol(exp))
 		return compile_symbol(exp,vm);
+	else if(is_let(exp))
+		return compile_let(exp,vm);
+	else if(is_letx(exp))
+		return compile_letx(exp,vm);
+	else if(is_eval(exp)){
+		exp = cadadr(exp);
+		return compile(exp,vm);
+	}
 	else if(is_pair(exp))
 		return compile_pair(exp,vm);
 	else

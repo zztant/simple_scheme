@@ -17,9 +17,9 @@
 #include"compile.c"
 
 #define add_procedure(scheme_name,c_name,vm) \
-	add_bind(make_symbol(scheme_name),        \
-			 make_prim_proc(c_name),     \
-			 vm)
+	vm->env = add_bind(make_symbol(scheme_name),        \
+			  make_prim_proc(c_name),     \
+			  vm->env);      
 
 void init(){
 	global_gc = init_gc();
@@ -29,6 +29,7 @@ void init(){
 	add_procedure("-",prim_proc_minus,global_vm);
 	add_procedure("*",prim_proc_mul,global_vm);
 	add_procedure("/",prim_proc_div,global_vm);
+	add_procedure("not",prim_proc_not,global_vm);
 	add_procedure("and",prim_proc_and,global_vm);
 	add_procedure("or",prim_proc_or,global_vm);
 	add_procedure("=",prim_proc_equal,global_vm);
@@ -53,7 +54,6 @@ int main(){
 	FILE* input;
 	object* stmt;
 	init();
-	do_collect(global_gc,global_vm);
 	while(1){
 		printf("\n>");
 		stmt = read_exp(stdin);
@@ -63,7 +63,6 @@ int main(){
 		eval_vm(global_vm);
 		print_ans(stdout,global_vm->stack);
 		global_vm->stack = make_null_list();
-		do_collect(global_gc,global_vm);
 	}
 	return 0;
 }

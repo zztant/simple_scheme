@@ -50,12 +50,16 @@ object* pop(secd_vm* vm){
 	return val;
 }
 
-void add_bind(object* var, object* val, secd_vm* vm){
-	object* bind = lookup_bind(var,vm->env);
-	if(is_null_list(bind))
-		vm->env = cons(cons(var,val),vm->env);
-	else
+object* add_bind(object* var, object* val, object* env){
+	object* bind = lookup_bind(var,env);
+	if(is_null_list(bind)){
+		env = cons(cons(var,val),env);
+		return env;
+	}
+	else{
 		bind->data.s_pair.cdr = val;
+		return env;
+	}
 }
 
 void set_bind(object* var, object* val, object* env){
@@ -74,6 +78,16 @@ void eval_ldc(object* code, secd_vm* vm){
 void eval_ld(object* code, secd_vm* vm){
 	object* var = car(code);
 	object* val = lookup_variable_value(var,vm->env);
+	if(is_null_list(val)){
+		object* dump = vm->dump;
+		while(!is_null_list(dump)){
+			if(!is_code(car(dump)))
+				val = lookup_variable_value(var,cadar(dump));
+			if(!is_null_list(val))
+				break;
+			dump = cdr(dump);
+		}
+	}
 	if(is_null_list(val))
 		error_handling();
 	vm->stack = cons(val,vm->stack);
@@ -105,11 +119,13 @@ void eval_ldf(object* code, secd_vm* vm){
 	vm->stack = cons(closure,vm->stack);
 }
 
-void add_bind_ap(object* param, object* argu, secd_vm* vm){
+object* add_bind_ap(object* param, object* argu, object* env){
 	if(!is_null_list(argu) && !is_null_list(param)){
-		add_bind(car(param), car(argu), vm);
-		add_bind_ap(cdr(param), cdr(argu), vm);
+		env = cons(cons(car(param), car(argu)), env);
+		env = add_bind_ap(cdr(param), cdr(argu), env);
+		return env;
 	}
+	return env;
 }
 
 
@@ -117,6 +133,16 @@ void eval_ap_prim(object* code, secd_vm* vm){
 	object* proc = pop(vm);
 	object* argu = pop(vm);
 	vm->stack = cons(apply(proc,argu),vm->stack);
+}
+
+
+void eval_ret(object* code, secd_vm* vm){
+	object* val = pop(vm);
+	vm->stack = caar(vm->dump);
+	vm->env = cadar(vm->dump);
+	vm->code = caddar(vm->dump);
+	vm->stack = cons(val,vm->stack);
+	vm->dump = cdr(vm->dump);
 }
 
 void eval_ap_comp(object* code, secd_vm* vm){
@@ -127,14 +153,12 @@ void eval_ap_comp(object* code, secd_vm* vm){
 	object* env = closure->data.s_comp_proc.env;
 	
 	/*清空寄存器*/
-	vm->dump = cons(vm->stack,cons(vm->env,cons(vm->code,vm->dump)));
+	vm->dump = cons(cons(vm->stack,cons(vm->env,cons(vm->code,make_null_list()))),vm->dump);
 	vm->stack = make_null_list();
 	/*安装闭包环境,添加对自由变量的绑定*/
-	vm->env = env;
+	vm->env = add_bind_ap(param,argu,env);
 	vm->code = body;
-	add_bind_ap(param,argu,vm);
 }
-
 
 void eval_ap(object* code, secd_vm* vm){
 	object* proc = car(vm->stack);
@@ -144,28 +168,31 @@ void eval_ap(object* code, secd_vm* vm){
 		eval_ap_comp(code,vm);
 }
 
-
-void eval_ret(object* code, secd_vm* vm){
-	object* val = pop(vm);
-	vm->stack = car(vm->dump);
-	vm->env = cadr(vm->dump);
-	vm->code = caddr(vm->dump);
-	vm->stack = cons(val,vm->stack);
-	vm->dump = cdddr(vm->dump);
-}
-
-
 void eval_dum(object* code, secd_vm* vm){
-	
+	vm->env = cons(make_null_list(),vm->env);	
 }
 
 void eval_rap(object* code, secd_vm* vm){
+	object* closure = pop(vm);
+	object* argu = pop(vm);
+	object* param = closure->data.s_comp_proc.parameters;
+	object* body = closure->data.s_comp_proc.body;
+	object* env = closure->data.s_comp_proc.env;
+	if(is_null_list(car(vm->env)))
+		vm->env = cdr(vm->env);
+
+	vm->dump = cons(vm->stack,cons(vm->env,cons(vm->code,vm->dump)));
+	vm->stack = make_null_list();
+
+	vm->code = body;
+	vm->env = add_bind_ap(param,argu,vm->env);
+
 }
 
 void eval_def(object* code, secd_vm* vm){
 	object* val = pop(vm);
 	object* var = car(code);
-	add_bind(var,val,vm);
+	vm->env = add_bind(var,val,vm->env);
 }
 
 void eval_set(object* code, secd_vm* vm){
@@ -193,6 +220,7 @@ void eval_vm(secd_vm* vm){
 start:
 	if(is_null_list(vm->code))
 		return;
+	collect(global_gc,vm);
 	object* code = vm->code;
 	vm->code = cdr(vm->code);
 	switch(code->type){

@@ -150,7 +150,6 @@ void collect(collector* gc, secd_vm* vm){
 		fprintf(stderr,"memory is overflow!!!!!\n");
 		exit(1);
 	}
-	printf("123\n");
 	if( gc->free >= gc->mem_car[0] + (MEMSIZE/4*3) ){
 	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 		do_collect(gc,vm);
