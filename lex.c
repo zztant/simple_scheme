@@ -8,11 +8,29 @@
 #include"gc.h"
 #include"vm.h"
 
+void read_comments(FILE* file){
+	char c;
+	c = getc(file);
+	if(c==';'){
+		do{
+			c = getc(file);
+		}while(c!='\n');
+	}
+	else
+		ungetc(c,file);
+}
+
 void read_space(FILE* file){
 	char c;
 	c = getc(file);
-	while( isspace(c) )
+	while( isspace(c) || c == ';' ){
+		if(c == ';'){
+			do{
+				c = getc(file);
+			}while(c!='\n');
+		}
 		c = getc(file);
+	}
 	ungetc(c,file);
 }
 
@@ -100,6 +118,7 @@ object* read_symbol(FILE* file){
 	return make_symbol(tmp);
 }
 
+
 object* read_exp(FILE* file){
 	char c;
 	object* car_obj;
@@ -142,10 +161,12 @@ object* read_exp(FILE* file){
 		else if(c=='\'')
 			return cons(make_symbol("quote"), cons(read_exp(file),make_null_list()));
 		else if(c==')'){
-			fprintf(stderr,"wrong expression for )\n>");
+			fprintf(stderr,"ERROR:: wrong expression for )\n>");
 			fflush(file);
 			return read_exp(file);
 		}
+		else if(c==EOF)
+			return NULL;
 		else {
 			ungetc(c,file);
 			return read_symbol(file);

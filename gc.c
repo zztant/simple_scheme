@@ -29,7 +29,7 @@ char is_full(collector* gc){
 
 
 char is_code(object* root){
-	return root->type >= NIL && root->type <= LIST ;
+	return root->type >= NIL && root->type <= CALLCC ;
 }
 
 /*破碎的心，car做标记，cdr指向新的位置*/
@@ -55,14 +55,14 @@ object* copy_mark(object* free, object* scan){
 	object* obj2;
 	object* obj3;
 	while(free != scan ){
-		while( !is_pair(scan) && !is_code(scan) && !is_comp_proc(scan)) {
+		while( !is_continuation(scan) && !is_pair(scan) && !is_code(scan) && !is_comp_proc(scan)) {
 		//	print_object(stdout,scan);
 		//	printf(",");
 			scan++;
 			if(free == scan)
 				return free;
 		}
-		if( !is_comp_proc(scan) ){
+		if( is_pair(scan) || is_code(scan) ){
 			obj1 = car(scan);
 			obj2 = cdr(scan);
 			if( !is_marked(obj1) ){
@@ -82,7 +82,7 @@ object* copy_mark(object* free, object* scan){
 			else
 				scan->data.s_pair.cdr = cdr(obj2);
 		}
-		else{
+		else if(is_comp_proc(scan)){
 			obj1 = scan->data.s_comp_proc.parameters;
 			obj2 = scan->data.s_comp_proc.body;
 			obj3 = scan->data.s_comp_proc.env;
@@ -110,6 +110,17 @@ object* copy_mark(object* free, object* scan){
 			}	
 			else
 				scan->data.s_comp_proc.env = cdr(obj3);
+		}
+		else{
+			obj1 = scan->data.s_continuation.value;
+			if( !is_marked(obj1)){
+				copy_obj(free,obj3);
+				mark_broken_heart(obj1,free);
+				scan->data.s_continuation.value = free;
+				free++;
+			}
+			else
+				scan->data.s_continuation.value = cdr(obj1);
 		}
 		scan++;
 	}

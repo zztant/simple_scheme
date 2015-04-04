@@ -45,6 +45,8 @@ void print_obj_pair(FILE *output, object* pair){
 }
 
 void print_obj_symbol(FILE* output, object* obj){
+	if(symbol_compare(obj,"#ok"))
+		return;
 	fprintf(output,"%s",obj->data.s_symbol.value);
 }
 
@@ -73,7 +75,8 @@ void print_object(FILE *output, object* obj){
 		case STRING: print_obj_string(output,obj); return;
 		case COMP_PROC: print_obj_comp_proc(output,obj); return;
 		case BOOLEAN: print_obj_boolean(output,obj); return;
-		case NULL_LIST : printf("null_list");return;
+		case NULL_LIST: fprintf(output,"null_list"); return;
+		case CONTINUATION: fprintf(output,"<continuation>"); return;
 		default: printf("%d",obj->type);
 	}
 }

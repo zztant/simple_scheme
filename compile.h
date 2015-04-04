@@ -13,7 +13,7 @@ object* compile_pair(object* exp, secd_vm* vm);
 object* compile(object* exp, secd_vm* vm);
 object* compile_proc(object* exp, secd_vm* vm);
 object* compile_argu(object* exp, secd_vm* vm);
-
+void compile_file(FILE* file, secd_vm* vm);
 
 void print_code(object* code);
 void print_code_sel(object* code);

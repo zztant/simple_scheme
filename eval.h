@@ -1,3 +1,5 @@
+void error_type(char* proc);
+void error_argu_num(char* proc);
 object* prim_proc_plus(object* arguments);
 object* prim_proc_minus(object* arguments);
 object* prim_proc_mul(object* arguments);

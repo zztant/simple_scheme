@@ -36,6 +36,7 @@ void init(){
 	add_procedure("<",prim_proc_lower,global_vm);
 	add_procedure(">",prim_proc_greater,global_vm);
 	add_procedure("cons",prim_proc_cons,global_vm);
+	add_procedure("list",prim_proc_list,global_vm);
 	add_procedure("null?",prim_proc_is_null,global_vm);
 	add_procedure("procedure?",prim_proc_is_proc,global_vm);
 	add_procedure("pair?",prim_proc_is_pair,global_vm);
@@ -47,7 +48,15 @@ void init(){
 	add_procedure("cdr",prim_proc_cdr,global_vm);
 	add_procedure("apply",prim_proc_apply,global_vm);
 	add_procedure("eval",prim_proc_eval,global_vm); 
+	add_procedure("load",prim_proc_load,global_vm);
+	add_procedure("display",prim_proc_display,global_vm);
+	add_procedure("newline",prim_proc_newline,global_vm);
 
+	FILE* fp = fopen("init.scm","rw");
+	compile_file(fp,global_vm);
+	eval_vm(global_vm);
+	global_vm->stack = make_null_list();
+	fclose(fp);
 }
 
 int main(){
@@ -55,11 +64,13 @@ int main(){
 	object* stmt;
 	init();
 	while(1){
-		printf("\n>");
+		printf("\nscheme@zztant>");
 		stmt = read_exp(stdin);
+	//	print_object(stdout,stmt);
+	//	printf("\n");
 		compile(stmt,global_vm);
-		print_code(global_vm->code);
-		printf("\n");
+	//	print_code(global_vm->code);
+	//	printf("\n");
 		eval_vm(global_vm);
 		print_ans(stdout,global_vm->stack);
 		global_vm->stack = make_null_list();

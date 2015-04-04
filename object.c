@@ -14,6 +14,13 @@ object* alloc_object(){
 	return obj;
 }
 
+object* make_continuation(object* value){
+	object* obj = alloc_object();
+	obj->type = CONTINUATION;
+	obj->data.s_continuation.value = value;
+	return obj;
+}
+
 object* make_broken_heart(){
 	object* obj = (object*)malloc(sizeof(object));
 	obj->type = BROKEN_HEART;
@@ -101,6 +108,16 @@ char value_lower(object* val1, object* val2){
 	return (value1>0&&value2<0) || (value1<0&&value2>0);
 }
 
+char value_greater(object* val1, object* val2){
+	int value1 = val1->data.s_rational.value1 *
+		         val2->data.s_rational.value2
+				 - val1->data.s_rational.value2 *
+				   val2->data.s_rational.value1;
+	int value2 = val1->data.s_rational.value2 *
+				 val2->data.s_rational.value2;
+	return (value1>0&&value2>0) || (value1<0&&value2<0);
+}
+
 object* make_real(double value){
 	object* obj = alloc_object();
 	obj->type = REAL;
@@ -155,6 +172,9 @@ object* make_null_list(){
 	return obj;
 }
 
+char is_continuation(object* obj){
+	return obj->type == CONTINUATION;
+}
 
 char is_null_list(object* obj){
 	return obj->type == NULL_LIST;

@@ -1,6 +1,36 @@
+4.4 
+
+通过复制整个寄存器的方式实现了call/cc，这里面副作用会比较混乱。
+
+实现了基本过程display,load和newline
+
+接下来打算实现宏，这样就可以完成对cond,letrec,>=,<=，也就不需要再编译时进行翻译了。
+
+加油！
+
 4.3
 
-想想怎么实现define-syntax
+((  (call/cc (lambda (k) k))
+    	(lambda (x) x)) "HEY!")
+
+
+(let ( (x (call/cc (lambda (k) k))))
+   (x (lambda (ignore) "hi")))
+
+call/cc是一个函数，该函数以另一个lambda构造的复合过程为参数，这个复合过程有一个参数（我们假设为exit,它也是单参的函数），返回值为我们需要求值的语句（设为exp,该语句中可能存在exit）。
+当调用call/cc时，exp中若遇到调用exit,则立即返回exit的参数，若求解exp的过程中没有调用exit,则正常返回exp的值。
+其实这个exit就是continuation,代表call/cc的括号外面的下一步是做什么。
+
+感觉做不下去了，先做出错处理，包括（变量是否被绑定，参数类型检查和参数数量的检查）
+
+完成了出错提示，开始看R5S5，可能需要挺多时间。
+
+整理了一下，还剩下下面5点没有处理
+
+1.letrec如何实现
+2.call/cc and CPS
+3.尾递归的优化
+4.define-syntax
 
 
 4.2

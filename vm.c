@@ -19,11 +19,6 @@ secd_vm* init_vm(){
 	return vm;
 }
 
-void error_handling(){
-	printf("\nhas some error during eval!!");
-	exit(1);
-}
-
 object* lookup_variable_value(object* var, object* env){
 	if(!is_null_list(env)){
 		if(var == caar(env))
@@ -64,8 +59,10 @@ object* add_bind(object* var, object* val, object* env){
 
 void set_bind(object* var, object* val, object* env){
 	object* bind = lookup_bind(var,env);
-	if(is_null_list(bind))
-		error_handling();
+	if(is_null_list(bind)){
+		fprintf(stderr,"ERROR:: unbound variable `%s'\n",var->data.s_symbol.value);
+		exit(1);
+	}
 	else
 		bind->data.s_pair.cdr = val;
 }
@@ -88,8 +85,10 @@ void eval_ld(object* code, secd_vm* vm){
 			dump = cdr(dump);
 		}
 	}
-	if(is_null_list(val))
-		error_handling();
+	if(is_null_list(val)){
+		fprintf(stderr,"ERROR:: unbound variable `%s'\n",var->data.s_symbol.value);
+		exit(1);
+	}
 	vm->stack = cons(val,vm->stack);
 }
 
@@ -124,6 +123,10 @@ object* add_bind_ap(object* param, object* argu, object* env){
 		env = cons(cons(car(param), car(argu)), env);
 		env = add_bind_ap(cdr(param), cdr(argu), env);
 		return env;
+	}
+	if(!(is_null_list(argu)&&is_null_list(param))){
+		fprintf(stderr,"ERROR:: wrong number of arguments for compound procedure!\n");
+		exit(1);
 	}
 	return env;
 }
@@ -160,44 +163,71 @@ void eval_ap_comp(object* code, secd_vm* vm){
 	vm->code = body;
 }
 
+void eval_ap_continuation(object* code, secd_vm* vm){
+	object* continuation = pop(vm);
+	object* argu = pop(vm);
+	object* stack = caar(continuation->data.s_continuation.value); 
+	object* env = cdar(continuation->data.s_continuation.value);
+	object* c_code = cadr(continuation->data.s_continuation.value);
+	object* dump = cddr(continuation->data.s_continuation.value);
+
+	vm->stack = stack;
+	vm->env = env;
+	vm->code = c_code;
+	vm->dump = dump;
+
+	if(!is_null_list(argu))
+		vm->stack = cons(car(argu),vm->stack);
+}
+
 void eval_ap(object* code, secd_vm* vm){
 	object* proc = car(vm->stack);
+	if(!is_prim_proc(proc)&&!is_comp_proc(proc)&&!is_continuation(proc)){
+		fprintf(stderr,"ERROR:: wrong type to apply:");
+		print_object(stderr,proc);
+		exit(1);
+	}
 	if(is_prim_proc(proc))
 		eval_ap_prim(code,vm);
 	else if(is_comp_proc(proc))
 		eval_ap_comp(code,vm);
+	else if(is_continuation(proc))
+		eval_ap_continuation(code,vm);
 }
 
 void eval_dum(object* code, secd_vm* vm){
-	vm->env = cons(make_null_list(),vm->env);	
 }
 
 void eval_rap(object* code, secd_vm* vm){
-	object* closure = pop(vm);
-	object* argu = pop(vm);
-	object* param = closure->data.s_comp_proc.parameters;
-	object* body = closure->data.s_comp_proc.body;
-	object* env = closure->data.s_comp_proc.env;
-	if(is_null_list(car(vm->env)))
-		vm->env = cdr(vm->env);
 
-	vm->dump = cons(vm->stack,cons(vm->env,cons(vm->code,vm->dump)));
-	vm->stack = make_null_list();
+}
 
-	vm->code = body;
-	vm->env = add_bind_ap(param,argu,vm->env);
-
+void error_def(object* var,char* proc){
+	if(!is_symbol(var)){
+		error_type(proc);
+		exit(1);
+	}
+	if( symbol_compare(var,"define") ||
+	    symbol_compare(var,"lambda") || symbol_compare(var,"set!") ||
+		symbol_compare(var,"let")    || symbol_compare(var,"let*") ||
+		symbol_compare(var,"letrec") || symbol_compare(var,"begin") ||
+		symbol_compare(var,"cond")   || symbol_compare(var,"if")){
+		fprintf(stderr,"ERROR:: can not %s keywords!\n",proc);
+		exit(1);
+	}
 }
 
 void eval_def(object* code, secd_vm* vm){
 	object* val = pop(vm);
 	object* var = car(code);
+	error_def(var,"define");
 	vm->env = add_bind(var,val,vm->env);
 }
 
 void eval_set(object* code, secd_vm* vm){
 	object* val = pop(vm);
 	object* var = car(code);
+	error_def(var,"set!");
 	set_bind(var,val,vm->env);
 }
 
@@ -214,6 +244,33 @@ void eval_list(object* code, secd_vm* vm){
 	char argu_num = car(code)->data.s_rational.value1;
 	object* argu_list = get_argu_list(argu_num,vm);
 	vm->stack = cons(argu_list,vm->stack);
+}
+
+void eval_callcc(object* code, secd_vm* vm){
+	object* closure = pop(vm);
+	if(!is_comp_proc(closure)){
+		fprintf(stderr,"ERROR:: wrong type of argument for call/cc\n");
+		exit(1);
+	}
+	object* param = closure->data.s_comp_proc.parameters;
+	object* body = closure->data.s_comp_proc.body;
+	object* env = closure->data.s_comp_proc.env;
+	if(is_null_list(param)||!is_null_list(cdr(param))){
+		fprintf(stderr,"ERROR:: wrong type of argument for call/cc\n");
+		exit(1);
+	}
+	/* 构造continuation */
+	object* value = cons(cons(vm->stack,
+				              vm->env),
+			             cons(vm->code,
+							  vm->dump));
+	object* continuation = make_continuation(value);
+	
+
+	vm->dump = cons(cons(vm->stack,cons(vm->env,cons(vm->code,make_null_list()))),vm->dump);
+	vm->stack = make_null_list();
+	vm->code = body;
+	vm->env = add_bind_ap(param,cons(continuation,make_null_list()),env);
 }
 
 void eval_vm(secd_vm* vm){
@@ -237,7 +294,9 @@ start:
 		case DEFINE: eval_def(code,vm); break;
 		case SET: eval_set(code,vm); break;
 		case LIST: eval_list(code,vm); break;
-		default: fprintf(stderr,"Wrong vm_code type!%d\n",code->type); exit(1);
+		case CALLCC: eval_callcc(code,vm); break;
+		default: fprintf(stderr,"ERROR:: wrong vm_code type!%d\n",code->type); 
+				 exit(1);
 	}
 	goto start;
 }

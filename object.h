@@ -5,10 +5,10 @@
 typedef enum{
 	/* scheme_type */
 	BOOLEAN,PAIR,SYMBOL,RATIONAL,REAL,CHAR,STRING,VECTOR,PORT,
-	PRIM_PROC,COMP_PROC,NULL_LIST,
+	PRIM_PROC,COMP_PROC,NULL_LIST,CONTINUATION,
 	/* code_type */
 	NIL,LDC,LD,SEL,JOIN,LDF,AP,RET,DUM,RAP,
-	DEFINE,SET,LIST,
+	DEFINE,SET,LIST,CALLCC,
 	/* gc */
 	BROKEN_HEART
 }object_type;
@@ -50,6 +50,9 @@ typedef struct object{
 		struct{
 			struct object* (*func)(struct object* arguments);
 		}s_prim_proc;
+		struct{
+			struct object* value;
+		}s_continuation;
 	}data;
 }object;
 
