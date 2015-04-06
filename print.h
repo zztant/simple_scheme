@@ -1,5 +1,5 @@
-#ifndef EVAL_H
-#define EVAL_H
+#ifndef PRINT_H
+#define PRINT_H
 
 void print_obj_pair(FILE* output, object* obj);
 void print_obj_prim_proc(FILE* output, object* obj);

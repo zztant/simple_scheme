@@ -8,6 +8,7 @@
 #include"gc.h"
 #include"vm.h"
 #include"compile.h"
+#include"macro.h"
 
 
 void error_compile(){
@@ -93,9 +94,12 @@ object* compile_def(object* exp, secd_vm* vm){
 	}
 	else{
 		vm->code = make_code(DEFINE,argu1,vm->code);
-
-		object* exp = cons(make_symbol("begin"),
-				           argu2);
+		
+		if( is_pair(car(argu2)) &&
+			symbol_compare(caar(argu2),"syntax-rules"))
+			exp = car(argu2);
+		else
+			exp = cons(make_symbol("begin"),argu2);
 		compile(exp,vm);
 	}
 	return true;
@@ -137,38 +141,6 @@ object* compile_lambda(object* exp, secd_vm* vm){
 	return true;
 }
 
-object* compile_let(object* exp, secd_vm* vm){
-	object* bind_list = cadr(exp);
-	object* var_list = make_null_list();
-	object* val_list = make_null_list();
-	exp = cddr(exp);
-	while(!is_null_list(bind_list)){
-		var_list = cons(caar(bind_list),var_list);
-		val_list = cons(cadar(bind_list),val_list);
-		bind_list = cdr(bind_list);
-	}
-	exp = cons(cons(make_symbol("lambda"),cons(var_list,exp)),val_list);
-	compile(exp,vm);
-}
-
-object* compile_letx(object* exp,secd_vm* vm){
-	object* bind_list = cadr(exp);
-	object* var_list = make_null_list();
-	object* val_list = make_null_list();
-	exp = caddr(exp);
-	while(!is_null_list(bind_list)){
-		var_list = cons(caar(bind_list),var_list);
-		val_list = cons(cadar(bind_list),val_list);
-		bind_list = cdr(bind_list);
-	}
-	while(!is_null_list(var_list)){
-		exp = cons( cons(make_symbol("lambda"),cons(cons(car(var_list),make_null_list()),cons(exp,make_null_list()))),cons(car(val_list),make_null_list()));
-		var_list = cdr(var_list);
-		val_list = cdr(val_list);
-	}
-	compile(exp,vm);
-}
-
 
 object* compile_if(object* exp, secd_vm* vm){
 	secd_vm tmp1,tmp2;
@@ -176,9 +148,11 @@ object* compile_if(object* exp, secd_vm* vm){
 	tmp2.code = make_code(JOIN,make_null_list(),make_null_list());
 	object* cond = cadr(exp);
 	object* yes = caddr(exp);
-	object* no = cadddr(exp);
 	compile(yes,&tmp1);
-	compile(no,&tmp2);
+	if(!is_null_list(cdddr(exp))){
+		object* no = cadddr(exp);
+		compile(no,&tmp2);
+	}
 	vm->code = make_code(SEL,cons(tmp1.code,tmp2.code),vm->code);
 	compile(cond,vm);
 	return true;
@@ -196,11 +170,72 @@ object* compile_callcc(object* exp, secd_vm* vm){
 	compile_argu(cdr(exp),vm);
 }
 
-//SEL指令的两个指针分别指向两个分支的code
+/* 对要定义的宏进行编译时语法检查 */
+object* compile_syntax(object* exp, secd_vm* vm){
+	object* literal = cadr(exp);
+	object* trans = cddr(exp);
+	object* macro = make_macro(cons(literal,trans));
+	compile(macro,vm);
+}
+
+object* pre_macro_list(object* exp, secd_vm* vm){
+	object* macro = make_null_list();
+	if(is_pair(exp)){
+		return exp = cons(pre_macro(car(exp),vm),
+				          pre_macro_list(cdr(exp),vm));
+	}
+	if(is_symbol(exp))
+		macro = lookup_variable_value(exp,vm->env);
+	if(is_macro(macro)){
+		fprintf(stderr,"ERROR:: compile syntax error\n");
+		exit(1);
+	}
+	return exp;
+}
+
+
+object* pre_macro(object* exp, secd_vm* vm){
+	object* macro = make_null_list();
+	if(is_pair(exp)){
+		if(is_definition(exp)){
+			object* argu1 = cadr(exp);
+			object* argu2 = cddr(exp);
+			if(is_pair(argu1)){
+				exp = argu2;
+				object* arg1 = car(argu1);
+				object* arg2 = cdr(argu1);
+				exp = make_define(arg1,make_lambda(arg2,exp));
+			}
+		}
+		if(is_symbol(car(exp)))
+			macro = lookup_variable_value(car(exp),vm->env);
+		if(is_macro(macro)){
+			exp = transform(exp,macro);
+//			printf("compile:::");
+//			print_object(stdout,exp);
+//			printf("\n");
+			return pre_macro(exp,vm);
+		}
+		exp = cons( pre_macro(car(exp),vm),
+				    pre_macro_list(cdr(exp),vm));
+		return exp;
+	}
+	return exp;
+}
+
+object* start_compile(object* exp, secd_vm* vm){
+	exp = pre_macro(exp,vm);
+	printf("compile:::");
+	print_object(stdout,exp);
+	printf("\n");
+	return compile(exp,vm);
+}
 
 object* compile(object* exp, secd_vm* vm){
 	if( is_atom(exp) )
 		return compile_atom(exp,vm);
+	else if(is_syntax(exp))
+		return compile_syntax(exp,vm);
 	else if(is_definition(exp))
 		return compile_def(exp,vm);
 	else if(is_quoted(exp))
@@ -217,16 +252,13 @@ object* compile(object* exp, secd_vm* vm){
 		return compile_symbol(exp,vm);
 	else if(is_begin(exp))
 		return compile_begin(cdr(exp),vm);
-	else if(is_let(exp))
-		return compile_let(exp,vm);
-	else if(is_letx(exp))
-		return compile_letx(exp,vm);
 	else if(is_eval(exp)){
 		exp = cadadr(exp);
 		return compile(exp,vm);
 	}
-	else if(is_pair(exp))
+	else if(is_pair(exp)){
 		return compile_pair(exp,vm);
+	}
 	else
 		error_compile();
 }

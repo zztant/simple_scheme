@@ -6,7 +6,38 @@
 
 接下来打算实现宏，这样就可以完成对cond,letrec,>=,<=，也就不需要再编译时进行翻译了。
 
-加油！
+宏变量的表示
+(literals . trans-list)
+这样一个binding中就是
+(macro-name literals . trans);
+
+语法
+(define-syntax let
+ (syntax-rules ()
+  ( (let ((x e) ...) b1 b2 ...)
+	((lambda (x ...) b1 b2 ...) e ...))))
+
+匹配(let ((var1 1) (va2 2) (va3 3)) exp1 exp2 exp3)
+
+有match:
+ <((var 1) (var2 2) (var3 3)),((x e) ...)>
+ < exp1,b1 >
+ < (exp2 exp3),(b2 ...) >
+ 转换
+(x ...)时，搜索match中x的位置,从对应位置得到
+  (pattern2 template2)))
+(var1 var2 var3)
+
+语法(x1 x2 x3 ...)
+匹配(t1 t2 t3 t4)
+有match:
+< t1,x1 >
+< t2,x2 >
+<(t3 t4),(x3 ...)>
+转换
+(x3 ...)时，搜索match中x3的位置，从对应位置得到
+(t3 t4)
+
 
 4.3
 

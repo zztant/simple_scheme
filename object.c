@@ -62,7 +62,7 @@ object* make_symbol(char *value){
 	object* obj = find_symbol(value,global_vm->table);
 	if(!is_null_list(obj))
 		return obj;
-	obj = (object*)malloc(sizeof(object));
+	obj = alloc_object();
 	obj->type = SYMBOL;
 	obj->data.s_symbol.value =(char*)malloc(sizeof(strlen(value)+1));
 	obj->data.s_symbol.value = strcpy(obj->data.s_symbol.value,value);
@@ -170,6 +170,17 @@ object* make_null_list(){
 	obj->data.s_pair.car = 0;
 	obj->data.s_pair.cdr = 0;
 	return obj;
+}
+
+object* make_macro(object* value){
+	object* obj = alloc_object();
+	obj->type = MACRO;
+	obj->data.s_macro.value = value;
+	return obj;
+}
+
+char is_macro(object* obj){
+	return obj->type == MACRO;
 }
 
 char is_continuation(object* obj){

@@ -7,7 +7,7 @@
 #include"print.h"
 #include"gc.h"
 #include"vm.h"
-
+#include"macro.h"
 
 void print_obj_rational(FILE* output, object* obj){
 	int val1 = obj->data.s_rational.value1;
@@ -63,9 +63,11 @@ void print_obj_string(FILE* output, object* obj){
 }
 
 void print_object(FILE *output, object* obj){
+//	if(obj==NULL) return;
 	switch(obj->type){
 		case RATIONAL: print_obj_rational(output,obj); return;
 		case PRIM_PROC: print_obj_prim_proc(output,obj); return;
+		case MACRO: print_object(output,obj->data.s_macro.value); return;
 		case PAIR:
 				fprintf(output,"(");	
 				print_obj_pair(output,obj); 
@@ -75,7 +77,7 @@ void print_object(FILE *output, object* obj){
 		case STRING: print_obj_string(output,obj); return;
 		case COMP_PROC: print_obj_comp_proc(output,obj); return;
 		case BOOLEAN: print_obj_boolean(output,obj); return;
-		case NULL_LIST: fprintf(output,"null_list"); return;
+		case NULL_LIST: fprintf(output,"()"); return;
 		case CONTINUATION: fprintf(output,"<continuation>"); return;
 		default: printf("%d",obj->type);
 	}

@@ -8,6 +8,7 @@
 #include"gc.h"
 #include"vm.h"
 #include"compile.h"
+#include"macro.h"
 #include"object.c"
 #include"eval.c"
 #include"lex.c"
@@ -15,6 +16,7 @@
 #include"gc.c"
 #include"vm.c"
 #include"compile.c"
+#include"macro.c"
 
 #define add_procedure(scheme_name,c_name,vm) \
 	vm->env = add_bind(make_symbol(scheme_name),        \
@@ -30,13 +32,10 @@ void init(){
 	add_procedure("*",prim_proc_mul,global_vm);
 	add_procedure("/",prim_proc_div,global_vm);
 	add_procedure("not",prim_proc_not,global_vm);
-	add_procedure("and",prim_proc_and,global_vm);
-	add_procedure("or",prim_proc_or,global_vm);
 	add_procedure("=",prim_proc_equal,global_vm);
 	add_procedure("<",prim_proc_lower,global_vm);
 	add_procedure(">",prim_proc_greater,global_vm);
 	add_procedure("cons",prim_proc_cons,global_vm);
-	add_procedure("list",prim_proc_list,global_vm);
 	add_procedure("null?",prim_proc_is_null,global_vm);
 	add_procedure("procedure?",prim_proc_is_proc,global_vm);
 	add_procedure("pair?",prim_proc_is_pair,global_vm);
@@ -57,6 +56,17 @@ void init(){
 	eval_vm(global_vm);
 	global_vm->stack = make_null_list();
 	fclose(fp);
+
+	printf("****************************************\n");
+	printf("*     This is a Scheme Interpreter     *\n");
+	printf("*       designed by ywHe from NAU      *\n");
+	printf("****************************************\n");
+
+	printf("My graduation design in Nanjing Audit University\n");
+	printf("Support for call/cc and define-syntax\n");
+	printf("But very slow and ugly\n\n");
+	
+
 }
 
 int main(){
@@ -64,11 +74,12 @@ int main(){
 	object* stmt;
 	init();
 	while(1){
+//  	do_collect(global_gc,global_vm);
 		printf("\nscheme@zztant>");
 		stmt = read_exp(stdin);
 	//	print_object(stdout,stmt);
 	//	printf("\n");
-		compile(stmt,global_vm);
+		start_compile(stmt,global_vm);
 	//	print_code(global_vm->code);
 	//	printf("\n");
 		eval_vm(global_vm);

@@ -7,6 +7,7 @@
 #include"print.h"
 #include"gc.h"
 #include"vm.h"
+#include"macro.h"
 
 
 secd_vm* init_vm(){
@@ -220,8 +221,9 @@ void error_def(object* var,char* proc){
 void eval_def(object* code, secd_vm* vm){
 	object* val = pop(vm);
 	object* var = car(code);
-	error_def(var,"define");
+//	error_def(var,"define");
 	vm->env = add_bind(var,val,vm->env);
+	vm->stack = cons(make_symbol("#ok"),vm->stack);
 }
 
 void eval_set(object* code, secd_vm* vm){
@@ -229,6 +231,7 @@ void eval_set(object* code, secd_vm* vm){
 	object* var = car(code);
 	error_def(var,"set!");
 	set_bind(var,val,vm->env);
+	vm->stack = cons(make_symbol("#ok"),vm->stack);
 }
 
 object* get_argu_list(char argu_num, secd_vm* vm){

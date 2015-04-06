@@ -7,6 +7,7 @@
 #include"print.h"
 #include"gc.h"
 #include"vm.h"
+#include"macro.h"
 
 #define symbol_true (make_boolean(1))
 #define symbol_false (make_boolean(0))
@@ -125,28 +126,6 @@ object* prim_proc_not(object* argu){
 		return symbol_false;
 }
 
-object* prim_proc_and(object* argu){
-	object* and = symbol_true;
-	while(!is_null_list(argu)){
-		and = car(argu);
-		if( is_false(and) )
-			return and;
-		argu = cdr(argu);
-	}
-	return and;
-}
-
-object* prim_proc_or(object* argu){
-	object* or = symbol_false;
-	while(!is_null_list(argu)){
-		or = car(argu);
-		if( is_true(or) )
-			return or;
-		argu = cdr(argu);
-	}
-	return symbol_false;
-}
-
 object* prim_proc_equal(object* argu){
 	if(is_null_list(argu)) 
 		return symbol_true;
@@ -207,12 +186,6 @@ object* prim_proc_cons(object* arguments){
 	return cons(car(arguments),cadr(arguments));
 }
 
-object* prim_proc_list(object* arguments){
-	if(!is_null_list(arguments))
-		return cons(car(arguments),
-				    prim_proc_list(cdr(arguments)));
-	return make_null_list();
-}
 
 object* prim_proc_is_null(object* exp){
 	if( check_argu_num(exp,0) || check_argu_num(exp,2))
@@ -344,7 +317,8 @@ char symbol_compare(object* exp, char* value){
 }
 
 char is_definition(object* exp){
-	return is_pair(exp) && symbol_compare(car(exp),"define");
+	return is_pair(exp) && (symbol_compare(car(exp),"define") ||
+			                symbol_compare(car(exp),"define-syntax"));
 }
 
 char is_quoted(object* exp){
@@ -382,6 +356,11 @@ char is_eval(object* exp){
 char is_callcc(object* exp){
 	return is_pair(exp) && symbol_compare(car(exp),"call/cc");
 }
+
+char is_syntax(object* exp){
+	return is_pair(exp) && symbol_compare(car(exp),"syntax-rules");
+}
+
 
 char is_false(object* obj){
 	return obj->type == BOOLEAN &&

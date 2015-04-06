@@ -5,7 +5,7 @@
 typedef enum{
 	/* scheme_type */
 	BOOLEAN,PAIR,SYMBOL,RATIONAL,REAL,CHAR,STRING,VECTOR,PORT,
-	PRIM_PROC,COMP_PROC,NULL_LIST,CONTINUATION,
+	PRIM_PROC,COMP_PROC,NULL_LIST,CONTINUATION,MACRO,
 	/* code_type */
 	NIL,LDC,LD,SEL,JOIN,LDF,AP,RET,DUM,RAP,
 	DEFINE,SET,LIST,CALLCC,
@@ -53,6 +53,9 @@ typedef struct object{
 		struct{
 			struct object* value;
 		}s_continuation;
+		struct{
+			struct object* value;
+		}s_macro;
 	}data;
 }object;
 
@@ -73,6 +76,7 @@ object* make_string(char* value);
 object* make_port(char* filename);
 object* make_comp_proc(object* parameters, object* body, object* env);
 object* make_null_list();
+object* make_macro(object* value);
 char is_null_list(object* obj);
 char is_boolean(object* obj);
 char is_symbol(object* obj);

@@ -7,6 +7,7 @@
 #include"print.h"
 #include"gc.h"
 #include"vm.h"
+#include"macro.h"
 
 void read_comments(FILE* file){
 	char c;
@@ -41,10 +42,17 @@ object* read_pair(FILE* file){
 	read_space(file);
 	c = getc(file);
 	if( c == '.' ){
-		cdr_obj = read_exp(file);
-		read_space(file);
-		getc(file);
-		return cdr_obj;
+		char t;
+		if((t=getc(file)) == ' '){
+			cdr_obj = read_exp(file);
+			read_space(file);
+			getc(file);
+			return cdr_obj;
+		}
+		else{
+			ungetc(t,file);
+			ungetc(c,file);
+		}
 	}
 	else if(  c == ')' )
 		return make_null_list();

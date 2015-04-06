@@ -7,6 +7,7 @@
 #include"print.h"
 #include"gc.h"
 #include"vm.h"
+#include"macro.h"
 
 collector* init_gc(){
 	collector* gc = (collector*)malloc(sizeof(collector));
@@ -55,7 +56,7 @@ object* copy_mark(object* free, object* scan){
 	object* obj2;
 	object* obj3;
 	while(free != scan ){
-		while( !is_continuation(scan) && !is_pair(scan) && !is_code(scan) && !is_comp_proc(scan)) {
+		while( !is_macro(scan) && !is_continuation(scan) && !is_pair(scan) && !is_code(scan) && !is_comp_proc(scan) ) {
 		//	print_object(stdout,scan);
 		//	printf(",");
 			scan++;
@@ -111,7 +112,7 @@ object* copy_mark(object* free, object* scan){
 			else
 				scan->data.s_comp_proc.env = cdr(obj3);
 		}
-		else{
+		else if(is_continuation(scan)){
 			obj1 = scan->data.s_continuation.value;
 			if( !is_marked(obj1)){
 				copy_obj(free,obj3);
@@ -121,6 +122,17 @@ object* copy_mark(object* free, object* scan){
 			}
 			else
 				scan->data.s_continuation.value = cdr(obj1);
+		}
+		else if(is_macro(scan)){
+			obj1 = scan->data.s_macro.value;
+			if( !is_marked(obj1)){
+				copy_obj(free,obj1);
+				mark_broken_heart(obj1,free);
+				scan->data.s_macro.value = free;
+				free++;
+			}
+			else
+				scan->data.s_macro.value = cdr(obj1);
 		}
 		scan++;
 	}
@@ -162,9 +174,9 @@ void collect(collector* gc, secd_vm* vm){
 		exit(1);
 	}
 	if( gc->free >= gc->mem_car[0] + (MEMSIZE/4*3) ){
-	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
+//	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 		do_collect(gc,vm);
-	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
+//	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 	}
 }
 
