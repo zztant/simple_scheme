@@ -1,3 +1,19 @@
+(define-syntax eval
+ (syntax-rules ()
+  ( (_ (quote _e))
+	_e)))
+
+(define-syntax list
+ (syntax-rules ()
+  ((_) '())
+  ((_ _v1) (cons _v1 '()))
+  ((_ _v1 _v2 ...) (cons _v1 (list _v2 ...)))))
+	
+(define-syntax begin
+ (syntax-rules ()
+  ( (_ _e ...)
+	((lambda () _e ...)))))
+	
 (define-syntax let
  (syntax-rules ()
   ( (let ((_x _e) ...) _b1 _b2 ...)
@@ -13,11 +29,6 @@
        (let* ((_name2 _val2) ...)
          _body1 _body2 ...)))))
 
-(define-syntax list
- (syntax-rules ()
-  ((_) '())
-  ((_ _v1) (cons _v1 '()))
-  ((_ _v1 _v2 ...) (cons _v1 (list _v2 ...)))))
 
 (define-syntax and
  (syntax-rules ()
@@ -87,6 +98,8 @@
 
 (define (set-cdr! x y)
  (cons (car x) y))
+
+
 
 (define (caar x) (car (car x)))
 (define (cadr x) (car (cdr x)))

@@ -27,7 +27,7 @@ object* lookup_variable_value(object* var, object* env){
 		else
 			return lookup_variable_value(var,cdr(env));
 	}
-	return make_null_list();
+	return make_symbol("#wrong");
 }
 
 object* lookup_bind(object* var, object* env){
@@ -76,17 +76,17 @@ void eval_ldc(object* code, secd_vm* vm){
 void eval_ld(object* code, secd_vm* vm){
 	object* var = car(code);
 	object* val = lookup_variable_value(var,vm->env);
-	if(is_null_list(val)){
+	if(symbol_compare(val,"#wrong")){
 		object* dump = vm->dump;
 		while(!is_null_list(dump)){
 			if(!is_code(car(dump)))
 				val = lookup_variable_value(var,cadar(dump));
-			if(!is_null_list(val))
+			if(!symbol_compare(val,"#wrong"))
 				break;
 			dump = cdr(dump);
 		}
 	}
-	if(is_null_list(val)){
+	if(symbol_compare(val,"#wrong")){
 		fprintf(stderr,"ERROR:: unbound variable `%s'\n",var->data.s_symbol.value);
 		exit(1);
 	}

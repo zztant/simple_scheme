@@ -253,18 +253,25 @@ object* prim_proc_eq(object* exp){
 }
 
 object* prim_proc_car(object* exp){
+	if(check_argu_num(exp,0) || check_argu_num(exp,2))
+		error_argu_num("car");
 	if(!is_pair(car(exp)))
 		error_type("car");
 	return caar(exp);
 }
 
 object* prim_proc_cdr(object* exp){
+	if(check_argu_num(exp,0) || check_argu_num(exp,2))
+		error_argu_num("cdr");
 	if(!is_pair(car(exp)))
 		error_type("cdr");
 	return cdar(exp);
 }
 
 object* prim_proc_apply(object* exp){
+	if(check_argu_num(exp,0) || check_argu_num(exp,1) ||
+	   check_argu_num(exp,3))
+		error_argu_num("apply");	
 	object* proc = car(exp);
 	if(!is_prim_proc(proc)&&!is_comp_proc(proc))
 		error_type("apply");
@@ -273,6 +280,9 @@ object* prim_proc_apply(object* exp){
 }
 
 object* prim_proc_eval(object* exp){
+	if(check_argu_num(exp,0) || check_argu_num(exp,1) ||
+	   check_argu_num(exp,3))
+		error_argu_num("eval");	
 	exp = caar(exp);
 	return make_null_list();
 }
@@ -335,14 +345,6 @@ char is_begin(object* exp){
 
 char is_lambda(object* exp){
 	return is_pair(exp) && symbol_compare(car(exp),"lambda");
-}
-
-char is_let(object* exp){
-	return is_pair(exp) && symbol_compare(car(exp),"let");
-}
-
-char is_letx(object* exp){
-	return is_pair(exp) && symbol_compare(car(exp),"let*");
 }
 
 char is_if(object* exp){

@@ -23,7 +23,7 @@
 			  make_prim_proc(c_name),     \
 			  vm->env);      
 
-void init(){
+void init(int argc, char** argv){
 	global_gc = init_gc();
 	global_vm = init_vm();
 	
@@ -64,21 +64,28 @@ void init(){
 
 	printf("My graduation design in Nanjing Audit University\n");
 	printf("Support for call/cc and define-syntax\n");
-	printf("But very slow and ugly\n\n");
+	printf("It is very slow and dirty\n\n");
 	
+	if(argc == 2){
+		FILE* fp = fopen(argv[1],"rw");
+		compile_file(fp,global_vm);
+		eval_vm(global_vm);
+		global_vm->stack = make_null_list();
+		fclose(fp);
+	}
 
 }
 
-int main(){
+int main(int argc,char **argv){
 	FILE* input;
 	object* stmt;
-	init();
+	init(argc,argv);
 	while(1){
 //  	do_collect(global_gc,global_vm);
 		printf("\nscheme@zztant>");
 		stmt = read_exp(stdin);
-	//	print_object(stdout,stmt);
-	//	printf("\n");
+//		print_object(stdout,stmt);
+//		printf("\n");
 		start_compile(stmt,global_vm);
 	//	print_code(global_vm->code);
 	//	printf("\n");

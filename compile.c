@@ -11,8 +11,8 @@
 #include"macro.h"
 
 
-void error_compile(){
-	fprintf(stderr,"ERROR:: compile error,wrong scheme expressions\n");
+void error_compile(char* str){
+	fprintf(stderr,"ERROR:: compile error. %s\n",str);
 	exit(1);
 }
 
@@ -52,7 +52,7 @@ object* compile_argu(object* exp, secd_vm* vm){
 
 char count_argu_num(object* exp){
 	if(!is_null_list(exp)&&!is_pair(exp))
-		error_compile();
+		error_compile("");
 	if(is_null_list(exp))
 		return 0;
 	else
@@ -83,6 +83,8 @@ object* make_define(object* argu1, object* argu2){
 }
 
 object* compile_def(object* exp, secd_vm* vm){
+	if(is_null_list(cdr(exp))||is_null_list(cddr(exp)))
+		error_compile("wrong define expression");
 	object* argu1 = cadr(exp);
 	object* argu2 = cddr(exp);
 	if(is_pair(argu1)){
@@ -94,12 +96,7 @@ object* compile_def(object* exp, secd_vm* vm){
 	}
 	else{
 		vm->code = make_code(DEFINE,argu1,vm->code);
-		
-		if( is_pair(car(argu2)) &&
-			symbol_compare(caar(argu2),"syntax-rules"))
-			exp = car(argu2);
-		else
-			exp = cons(make_symbol("begin"),argu2);
+		exp = car(argu2);
 		compile(exp,vm);
 	}
 	return true;
@@ -111,6 +108,8 @@ object* compile_quoted(object* exp, secd_vm* vm){
 }
 
 object* compile_set(object* exp, secd_vm* vm){
+	if(is_null_list(cdr(exp))||is_null_list(cddr(exp)))
+		error_compile("wrong set! expression");
 	object* argu1 = cadr(exp);
 	object* argu2 = caddr(exp);
 	vm->code = make_code(SET,argu1,vm->code);
@@ -118,16 +117,26 @@ object* compile_set(object* exp, secd_vm* vm){
 	return true;
 }
 
+object* compile_list(object* list, secd_vm* vm){
+	if(!is_null_list(list)){
+		compile_list(cdr(list),vm);
+		compile(car(list),vm);
+	}
+	return true;
+}
+
 object* compile_ldf(object* param, object* body, secd_vm* vm){
 	secd_vm tmp;
 	tmp.code = make_code(RET,make_null_list(),make_null_list());
-	compile(body,&tmp);
+	compile_list(body,&tmp);
 	vm->code = make_code(LDF,cons(param,tmp.code),vm->code);
 	return true;
 }
 //LDF指令的car为形参列表，cdr指向第一条code
 
 object* compile_lambda(object* exp, secd_vm* vm){
+	if(is_null_list(cdr(exp))||is_null_list(cddr(exp)))
+		error_compile("wrong lambda expression");
 	object* body = cddr(exp);
 	object* param = cadr(exp);
 	object* error_test = param;
@@ -136,13 +145,14 @@ object* compile_lambda(object* exp, secd_vm* vm){
 			error_type("lambda");
 		error_test = cdr(error_test);
 	}
-	body = cons(make_symbol("begin"),body);
 	compile_ldf(param,body,vm);
 	return true;
 }
 
 
 object* compile_if(object* exp, secd_vm* vm){
+	if(is_null_list(cdr(exp))||is_null_list(cddr(exp)))
+		error_compile("wrong if expression");
 	secd_vm tmp1,tmp2;
 	tmp1.code = make_code(JOIN,make_null_list(),make_null_list());
 	tmp2.code = make_code(JOIN,make_null_list(),make_null_list());
@@ -158,16 +168,10 @@ object* compile_if(object* exp, secd_vm* vm){
 	return true;
 }
 
-object* compile_begin(object* exp, secd_vm* vm){
-	if(is_null_list(exp))
-		return true;
-	compile_begin(cdr(exp),vm);
-	compile(car(exp),vm);
-}
-
 object* compile_callcc(object* exp, secd_vm* vm){
 	vm->code = make_code(CALLCC,make_null_list(),vm->code);
 	compile_argu(cdr(exp),vm);
+	return true;
 }
 
 /* 对要定义的宏进行编译时语法检查 */
@@ -176,6 +180,7 @@ object* compile_syntax(object* exp, secd_vm* vm){
 	object* trans = cddr(exp);
 	object* macro = make_macro(cons(literal,trans));
 	compile(macro,vm);
+	return true;
 }
 
 object* pre_macro_list(object* exp, secd_vm* vm){
@@ -198,8 +203,10 @@ object* pre_macro(object* exp, secd_vm* vm){
 	object* macro = make_null_list();
 	if(is_pair(exp)){
 		if(is_definition(exp)){
-			object* argu1 = cadr(exp);
-			object* argu2 = cddr(exp);
+			if(is_null_list(cdr(exp))||is_null_list(cddr(exp)))
+				error_compile("wrong define expression");
+				object* argu1 = cadr(exp);
+				object* argu2 = cddr(exp);
 			if(is_pair(argu1)){
 				exp = argu2;
 				object* arg1 = car(argu1);
@@ -250,24 +257,22 @@ object* compile(object* exp, secd_vm* vm){
 		return compile_if(exp,vm);
 	else if(is_symbol(exp))
 		return compile_symbol(exp,vm);
-	else if(is_begin(exp))
-		return compile_begin(cdr(exp),vm);
 	else if(is_eval(exp)){
 		exp = cadadr(exp);
 		return compile(exp,vm);
 	}
-	else if(is_pair(exp)){
+	else if(is_pair(exp))
 		return compile_pair(exp,vm);
-	}
 	else
-		error_compile();
+		error_compile("");
+	return true;
 }
 
 void compile_file(FILE* file, secd_vm* vm){
 	object* stmt;
 	if( (stmt = read_exp(file))!=NULL){
 		compile_file(file,vm);
-		compile(stmt,vm);
+		start_compile(stmt,vm);
 	}
 	return;
 }
@@ -305,6 +310,7 @@ void print_code(object* code){
 			case DEFINE: printf("DEFINE->,"); break;
 			case LIST: printf("LIST->,"); break;
 			case SET: printf("SET->,"); break;
+			default: break;
 		}
 		print_code(cdr(code));
 	}

@@ -140,7 +140,7 @@ object* copy_mark(object* free, object* scan){
 }	
 
 void do_collect(collector* gc, secd_vm* vm){
-	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
+//	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 	
 	object* root =	cons(cons(cons(vm->env,vm->code),
 							  cons(vm->dump,vm->stack)),
@@ -165,7 +165,7 @@ void do_collect(collector* gc, secd_vm* vm){
 	object** tmp = gc->mem_car;
 	gc->mem_car = gc->mem_cdr;
 	gc->mem_cdr = tmp;
-	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
+//	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 }
 
 void collect(collector* gc, secd_vm* vm){

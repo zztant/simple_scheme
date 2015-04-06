@@ -5,8 +5,7 @@
 
 3.解释器还没有实现尾递归，尝试理解一下什么是continuation-passing-style
 
-
-
+4.把begin也改成了宏，修正了一个(define a '())之后a查找不到的BUG。
 
 4.4 
 
