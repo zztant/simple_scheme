@@ -1,3 +1,13 @@
+4.5 
+
+1.完成了define-syntax的过程，但是这个宏不卫生
+2.加了init.scm 初始化解释器时把cond,let,let星，and,or等改成了宏定义，修正了之前and,or会把先把所有参数值算出来的错误。
+
+3.解释器还没有实现尾递归，尝试理解一下什么是continuation-passing-style
+
+
+
+
 4.4 
 
 通过复制整个寄存器的方式实现了call/cc，这里面副作用会比较混乱。
