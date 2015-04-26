@@ -50,6 +50,8 @@ void init(int argc, char** argv){
 	add_procedure("load",prim_proc_load,global_vm);
 	add_procedure("display",prim_proc_display,global_vm);
 	add_procedure("newline",prim_proc_newline,global_vm);
+	add_procedure("read",prim_proc_read,global_vm);
+	add_procedure("number?",prim_proc_is_number,global_vm);
 
 	FILE* fp = fopen("init.scm","rw");
 	compile_file(fp,global_vm);
@@ -59,10 +61,8 @@ void init(int argc, char** argv){
 
 	printf("****************************************\n");
 	printf("*     This is a Scheme Interpreter     *\n");
-	printf("*       designed by ywHe from NAU      *\n");
 	printf("****************************************\n");
 
-	printf("My graduation design in Nanjing Audit University\n");
 	printf("Support for call/cc and define-syntax\n");
 	printf("It is very slow and dirty\n\n");
 	
@@ -84,8 +84,8 @@ int main(int argc,char **argv){
 //  	do_collect(global_gc,global_vm);
 		printf("\nscheme@zztant>");
 		stmt = read_exp(stdin);
-//		print_object(stdout,stmt);
-//		printf("\n");
+	//	print_object(stdout,stmt);
+	//	printf("\n");
 		start_compile(stmt,global_vm);
 	//	print_code(global_vm->code);
 	//	printf("\n");

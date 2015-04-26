@@ -174,9 +174,9 @@ void collect(collector* gc, secd_vm* vm){
 		exit(1);
 	}
 	if( gc->free >= gc->mem_car[0] + (MEMSIZE/4*3) ){
-//	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
+	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 		do_collect(gc,vm);
-//	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
+	printf("\nhave %d object\n",gc->free - gc->mem_car[0]);
 	}
 }
 

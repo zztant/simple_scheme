@@ -232,9 +232,9 @@ object* pre_macro(object* exp, secd_vm* vm){
 
 object* start_compile(object* exp, secd_vm* vm){
 	exp = pre_macro(exp,vm);
-	printf("compile:::");
-	print_object(stdout,exp);
-	printf("\n");
+//	printf("compile:::");
+//	print_object(stdout,exp);
+//	printf("\n");
 	return compile(exp,vm);
 }
 
@@ -257,10 +257,6 @@ object* compile(object* exp, secd_vm* vm){
 		return compile_if(exp,vm);
 	else if(is_symbol(exp))
 		return compile_symbol(exp,vm);
-	else if(is_eval(exp)){
-		exp = cadadr(exp);
-		return compile(exp,vm);
-	}
 	else if(is_pair(exp))
 		return compile_pair(exp,vm);
 	else

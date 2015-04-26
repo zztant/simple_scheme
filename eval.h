@@ -1,5 +1,17 @@
 void error_type(char* proc);
 void error_argu_num(char* proc);
+object* plus_ratio_real(object* obj1, object* obj2);
+object* plus_ratio_ratio(object* obj1, object* obj2);
+object* plus_real_real(object* obj1, object* obj2);
+object* minus_ratio_real(object* obj1, object* obj2);
+object* minus_ratio_ratio(object* obj1, object* obj2);
+object* minus_real_real(object* obj1, object* obj2);
+object* mul_ratio_real(object* obj1, object* obj2);
+object* mul_ratio_ratio(object* obj1, object* obj2);
+object* mul_real_real(object* obj1, object* obj2);
+object* div_ratio_real(object* obj1, object* obj2);
+object* div_ratio_ratio(object* obj1, object* obj2);
+object* div_real_real(object* obj1, object* obj2);
 object* prim_proc_plus(object* arguments);
 object* prim_proc_minus(object* arguments);
 object* prim_proc_mul(object* arguments);

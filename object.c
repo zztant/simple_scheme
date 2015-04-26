@@ -66,7 +66,6 @@ object* make_symbol(char *value){
 	obj->type = SYMBOL;
 	obj->data.s_symbol.value =(char*)malloc(sizeof(strlen(value)+1));
 	obj->data.s_symbol.value = strcpy(obj->data.s_symbol.value,value);
-	
 	global_vm->table = cons(obj,global_vm->table);
 
 	return obj;
@@ -90,32 +89,6 @@ object* make_rational(int value1, int value2){
 	obj->data.s_rational.value1 = value1 / gcd(value1,value2);
 	obj->data.s_rational.value2 = value2 / gcd(value1,value2);
 	return obj;
-}
-
-//need change
-char value_equal(object* val1, object* val2){
-	return val1->data.s_rational.value1 == val2->data.s_rational.value1
-		&& val1->data.s_rational.value2 == val2->data.s_rational.value2;
-}
-
-char value_lower(object* val1, object* val2){
-	int value1 = val1->data.s_rational.value1 *
-		         val2->data.s_rational.value2
-				 - val1->data.s_rational.value2 *
-				   val2->data.s_rational.value1;
-	int value2 = val1->data.s_rational.value2 *
-				 val2->data.s_rational.value2;
-	return (value1>0&&value2<0) || (value1<0&&value2>0);
-}
-
-char value_greater(object* val1, object* val2){
-	int value1 = val1->data.s_rational.value1 *
-		         val2->data.s_rational.value2
-				 - val1->data.s_rational.value2 *
-				   val2->data.s_rational.value1;
-	int value2 = val1->data.s_rational.value2 *
-				 val2->data.s_rational.value2;
-	return (value1>0&&value2>0) || (value1<0&&value2<0);
 }
 
 object* make_real(double value){

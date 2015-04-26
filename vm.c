@@ -209,10 +209,9 @@ void error_def(object* var,char* proc){
 		exit(1);
 	}
 	if( symbol_compare(var,"define") ||
-	    symbol_compare(var,"lambda") || symbol_compare(var,"set!") ||
-		symbol_compare(var,"let")    || symbol_compare(var,"let*") ||
-		symbol_compare(var,"letrec") || symbol_compare(var,"begin") ||
-		symbol_compare(var,"cond")   || symbol_compare(var,"if")){
+	    symbol_compare(var,"lambda") || 
+		symbol_compare(var,"set!") ||
+		symbol_compare(var,"if")){
 		fprintf(stderr,"ERROR:: can not %s keywords!\n",proc);
 		exit(1);
 	}
@@ -221,7 +220,7 @@ void error_def(object* var,char* proc){
 void eval_def(object* code, secd_vm* vm){
 	object* val = pop(vm);
 	object* var = car(code);
-//	error_def(var,"define");
+	error_def(var,"define");
 	vm->env = add_bind(var,val,vm->env);
 	vm->stack = cons(make_symbol("#ok"),vm->stack);
 }

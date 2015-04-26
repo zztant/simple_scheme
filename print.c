@@ -20,6 +20,10 @@ void print_obj_rational(FILE* output, object* obj){
 		fprintf(output,"%d/%d",abs(val1),abs(val2));
 }
 
+void print_obj_real(FILE* output, object* obj){
+	fprintf(output,"%lf",obj->data.s_real.value);
+}
+
 void print_obj_prim_proc(FILE* output, object* obj){
 	fprintf(output,"<primitive procedure>");
 }
@@ -66,6 +70,7 @@ void print_object(FILE *output, object* obj){
 //	if(obj==NULL) return;
 	switch(obj->type){
 		case RATIONAL: print_obj_rational(output,obj); return;
+		case REAL: print_obj_real(output,obj); return;
 		case PRIM_PROC: print_obj_prim_proc(output,obj); return;
 		case MACRO: print_object(output,obj->data.s_macro.value); return;
 		case PAIR:

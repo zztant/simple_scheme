@@ -80,7 +80,19 @@ object* read_digit(FILE* file){
 		value1 = value1*10 + c-'0';
 		c = getc(file);
 	}
-	if(c=='/'){
+	if(c== '.'){
+		c = getc(file);
+		while(isdigit(c)){
+			value2 = value2*10 + c-'0';
+			c = getc(file);
+		}
+		ungetc(c,file);
+		double ans = value2;
+		while(ans>=1)
+			ans/=10;
+		return make_real((ans+value1)*positive1);
+	}
+	else if(c=='/'){
 		c = getc(file);
 		if(c=='-'){
 			positive2 = -1;
@@ -130,7 +142,6 @@ object* read_symbol(FILE* file){
 object* read_exp(FILE* file){
 	char c;
 	object* car_obj;
-	fflush(stdin);
 	if( (c=getc(file))!=EOF ){
 		ungetc(c,file);
 		read_space(file);
