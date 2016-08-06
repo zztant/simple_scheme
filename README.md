@@ -9,8 +9,12 @@
  
  4.garbage collector
 
+## Compile envinronment:
+ 1. Ubuntu14.04 with clang-3.8
 
 ## Reference:
  1.[SECD machine](https://en.wikipedia.org/wiki/SECD_machine)
  
  2.Structure and Interpretation of Computer language
+
+
