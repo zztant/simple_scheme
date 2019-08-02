@@ -15,6 +15,6 @@
 ## Reference:
  1. [SECD machine](https://en.wikipedia.org/wiki/SECD_machine)
  
- 2. <<Structure and Interpretation of Computer Programs>>
+ 2. 《Structure and Interpretation of Computer Programs》
 
 
